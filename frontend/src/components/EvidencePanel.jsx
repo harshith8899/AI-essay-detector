@@ -36,6 +36,14 @@ export default function EvidencePanel({ sentence }) {
 
       <details className="technical-details">
         <summary>Technical details</summary>
+        <p className="technical-disclosure">
+          Sentence-level signals are explanatory estimates derived from sentence-local
+          measurements. They are not independently trained sentence-level probabilities or
+          proof of authorship — the classifier itself only ever sees whole-essay statistics;
+          this sentence score approximates its reasoning by reusing the model's learned
+          feature weights against this sentence's own local values, then scaling relative to
+          the other sentences in this essay.
+        </p>
         <table className="technical-table">
           <tbody>
             {sentence.top_features.map((feature, i) => (

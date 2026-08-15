@@ -1,46 +1,147 @@
-# AI Essay Detector
+# AI Essay Signal Analyzer
 
-## What this project does
+## Problem
 
-A tool for analyzing college admissions essays to identify sentences or passages that are likely machine-written, with concrete evidence explaining why each flagged span was flagged.
+College admissions offices increasingly worry that essays may be partly or wholly written by AI. Existing "AI detectors" are largely black boxes: they hand an essay to a chat model and ask it to render a verdict, then present a single confident-looking percentage with no way to inspect *why*. That approach is unreliable (LLM self-judgment of AI-generated text is not well-calibrated) and unaccountable (a reader can't see what evidence, if any, backs the number).
 
-The detector does **not** ask a language model to render a verdict. A local language model (GPT-2) is used only as an instrument to produce measurable signals — token log-probabilities, perplexity, and burstiness. Those numbers are combined with independent stylometric features (sentence length, lexical diversity, POS-tag entropy, function-word frequencies, cliché/transition-word usage) into a fixed-order feature vector. Classification is performed by our own explicitly-trained, interpretable scikit-learn classifier (Logistic Regression / Gradient Boosting) — never by asking a chat model to classify or score the essay.
+This project takes a different approach: extract **measurable, inspectable, numeric signals** from an essay — statistical properties of how predictable its wording is under a language model, and independent linguistic/stylometric properties of its structure and word choice — and combine those explicit numbers with our own trained classifier. The result is a score with a paper trail: every essay-level and sentence-level number traces back to a specific, named, human-readable measurement.
 
-## Current architecture
+## Core design principle
 
-```text
+```
+LM        →  statistical measurements   (token log-probabilities, perplexity, burstiness)
+Our code  →  feature extraction          (lm_features.py + stylometry.py, 61 numeric features)
+Our classifier →  decision               (scikit-learn Logistic Regression, explicitly trained)
+UI        →  evidence                    (sentence highlighting, plain-language explanations, charts)
+```
+
+**No chat model is called during essay analysis to make the classification decision.** GPT-2 is loaded locally and used strictly as an instrument: it is never prompted with "is this AI-generated?" and it never renders a verdict. It only produces token log-probabilities, from which our own code computes perplexity and burstiness. All feature combination, thresholds, scaling, and classification happen in explicit Python/scikit-learn code that ships in this repository and can be read end to end.
+
+## Architecture
+
+```
 ai-essay-detector/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py            FastAPI entrypoint (health check only so far)
-│   │   ├── lm_features.py     GPT-2 instrument: token log-probs, perplexity, burstiness
-│   │   ├── stylometry.py      spaCy-based linguistic/stylometric features (no LLM)
-│   │   ├── spacy_pipeline.py  Shared en_core_web_sm loader used by both extractors
-│   │   ├── scoring.py         Feature-vector construction + trained-classifier loading/prediction
-│   │   └── models/            Saved classifier artifacts (model.pkl, scaler.pkl, feature_names.json, metadata.json)
+│   │   ├── main.py             FastAPI app: GET /, POST /analyze
+│   │   ├── lm_features.py      GPT-2 instrument: token log-probs → perplexity, burstiness
+│   │   ├── stylometry.py       spaCy-based linguistic features (no LLM involved)
+│   │   ├── spacy_pipeline.py   Shared en_core_web_sm loader (used by both extractors)
+│   │   ├── scoring.py          Feature-vector construction, classifier loading,
+│   │   │                       essay score + sentence-evidence engine
+│   │   └── models/             Saved artifacts: model.pkl, scaler.pkl,
+│   │                           feature_names.json, metadata.json
 │   ├── scripts/
-│   │   ├── seed_dev_dataset.py    Writes the hand-authored development dataset to data/
-│   │   ├── generate_polished.py   Real (API-gated) human->polished essay generator + sentence diff
-│   │   ├── build_dataset.py       Discovers data/*_essays/*.txt -> dataset table
-│   │   ├── build_features.py      Runs both extractors on every essay -> data/features.csv
-│   │   └── train_classifier.py    Trains/evaluates/saves the classifier
-│   └── tests/                 pytest suite (unit tests per module + full-pipeline integration test)
-├── data/            Essay corpora (human / AI / AI-polished) + features.csv — see data/README.md
-└── frontend/        Client application (not yet created)
+│   │   ├── seed_dev_dataset.py    Writes the hand-authored development dataset
+│   │   ├── generate_polished.py   Real (API-gated) human→polished essay generator
+│   │   ├── build_dataset.py       data/*_essays/*.txt → dataset table
+│   │   ├── build_features.py      Runs both extractors on every essay → features.csv
+│   │   ├── train_classifier.py    Trains, evaluates, saves the deployed classifier
+│   │   └── evaluate.py            Held-out evaluation, ablation, confident-failure,
+│   │                              and polished-essay analysis (see REPORT.md)
+│   └── tests/                  pytest suite (unit tests per module + API integration test)
+├── data/                       Essay corpora + features.csv — see data/README.md
+├── frontend/                   React + Vite web interface
+├── REPORT.md                   Full evaluation report
+└── README.md                   This file
 ```
 
-## Current feature set
+## Tech stack
 
-Computed per essay via `app/scoring.py: build_feature_vector()`, 61 features total, always in the same fixed order (`FEATURE_NAMES`):
+**Backend:** Python, FastAPI, PyTorch, Hugging Face Transformers, GPT-2, spaCy, scikit-learn.
 
-- **From GPT-2** (`lm_features.py`): `mean_perplexity`, `burstiness` — token log-probabilities are computed with real preceding-essay context (not per-sentence in isolation), via a sliding window when an essay exceeds GPT-2's 1024-token context.
-- **From stylometry** (`stylometry.py`, spaCy only, no LLM): `sentence_length_mean`, `sentence_length_std`, `type_token_ratio`, `hapax_rate`, `pos_bigram_entropy`, `function_word_rate`, `cliche_count`, `cliche_rate`, `transition_opener_rate`, plus the full 50-word fixed function-word frequency profile (`fw_<word>`).
+**Frontend:** React, Vite, plain CSS (no UI framework, no state-management library).
 
-Sentence-level detail (per-sentence perplexity, cliché matches, transition openers, offsets into the original essay) is preserved by both extractors so a future phase can derive sentence-level evidence without re-running the model.
+## Features
+
+- **Essay analysis** — paste an essay, get a full breakdown in one request.
+- **Sentence highlighting** — every sentence in the essay is rendered with a continuous, single-hue background intensity proportional to its own signal score (never a red/green binary verdict).
+- **Evidence explanations** — click any sentence to open a side panel showing its signal score and the top 3 contributing measurements, each with a plain-language note (a secondary "technical details" toggle exposes the raw numbers for anyone who wants them).
+- **Perplexity visualization** — a per-sentence perplexity bar chart makes the burstiness concept (human writing tends to swing between predictable and surprising; AI text tends to stay uniformly predictable) visible at a glance.
+- **Overall signal score** — a single 0–100 "AI-likeness signal" with a continuous meter, explicitly labeled as an experimental model score, not a probability of authorship.
+- **Limitations panel** — every response carries a `limitations` array, rendered prominently in the UI (not hidden in a tooltip), listing the dataset's size, known artifacts, and the fact that no AI detector can establish authorship with certainty.
+
+## How it works
+
+```
+Essay
+  |
+  v
+Sentence segmentation (spaCy, en_core_web_sm)
+  |
+  v
+GPT-2 token log-probabilities (real preceding-essay context, sliding
+window beyond GPT-2's 1024-token limit)          -->  mean_perplexity, burstiness
+  |
+  +-----------------------------+
+                                |
+                                v
+                    Stylometric extraction (spaCy only, no LLM):
+                    sentence length, TTR, hapax rate, POS-bigram
+                    entropy, function-word profile, cliche/transition
+                    detection
+                                |
+  +-----------------------------+
+  |
+  v
+61-feature vector (fixed order, see REPORT.md §9)
+  |
+  v
+StandardScaler (fit on training data, saved to disk)
+  |
+  v
+Logistic Regression (explicitly trained, saved to disk — no retraining at request time)
+  |
+  v
+Essay signal (0-100, from predict_proba, presented as an experimental score)
+  |
+  v
+Sentence evidence (a documented, deterministic heuristic — see "Sentence-level
+scoring" below — NOT an independently trained sentence-level classifier)
+```
+
+## Running locally
+
+**Backend:**
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate          # Windows; use `source .venv/bin/activate` on macOS/Linux
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm   # if not already installed
+uvicorn app.main:app --reload
+```
+
+`GET http://localhost:8000/` → `{"status": "ok", "service": "AI Essay Detector"}`.
+`POST http://localhost:8000/analyze` with body `{"essay": "..."}` → the full analysis response.
+
+**Frontend** (in a second terminal):
+
+```bash
+cd frontend
+npm install
+cp .env.example .env      # or set VITE_API_URL yourself; defaults to http://localhost:8000
+npm run dev
+```
+
+Open the printed local URL (typically `http://localhost:5173`), paste an essay, click "Analyze Essay".
+
+**Tests:**
+
+```bash
+cd backend
+pytest tests -v
+```
+
+```bash
+cd frontend
+npm run build
+```
 
 ## Training workflow
 
-```text
+```
 data/human_essays, data/ai_essays, data/polished_essays  (.txt + .json sidecars)
         |  scripts/build_dataset.py
         v
@@ -50,65 +151,43 @@ dataset table (essay_id, category, label, text, source metadata)
 data/features.csv + data/feature_names.json
         |  scripts/train_classifier.py
         v
-essay-level train/test split (stratified, fixed seed, never splits sentences of one essay)
+essay-level train/test split (stratified, fixed seed=42, test_size=0.25;
+never splits sentences of one essay — each row is already one whole essay)
         v
 Logistic Regression (scaled) + Gradient Boosting, evaluated on held-out test set
         v
 backend/app/models/{model.pkl, scaler.pkl, feature_names.json, metadata.json}
 ```
 
-Polished essays are loaded but deliberately excluded from the binary train/test split (they're a mixed human+LLM-edited case, not a clean human/AI label) — they're only scored as a reference after training.
+Polished essays are loaded but deliberately excluded from the binary train/test split — they are a mixed human+LLM-edited case, not a clean human/AI label — and are only scored as a reference after training. Run `python -m scripts.evaluate` for the full held-out evaluation, ablation experiment, and polished-essay analysis (see `REPORT.md`).
 
-## How to train
+## Dataset
 
-```bash
-cd backend
-.venv\Scripts\activate
-python -m scripts.seed_dev_dataset     # only needed once, or to regenerate the dev dataset
-python -m scripts.build_dataset        # sanity-check: prints dataset counts
-python -m scripts.build_features       # writes data/features.csv
-python -m scripts.train_classifier     # trains, evaluates, saves model artifacts
-```
+**44 essays total: 16 human, 16 AI, 12 polished.** Every essay was hand-authored by the assistant in a single offline session as development placeholder content — none are real applicants' essays, and none were produced by an actual LLM API call (no API is configured in this project). Full provenance, topic coverage, and known authoring artifacts are documented in [`data/README.md`](data/README.md).
 
-## How to run the application
+## Evaluation
 
-```bash
-cd backend
-.venv\Scripts\activate
-uvicorn app.main:app --reload
-```
+**These are development-dataset results, not a scientific validation of real-world accuracy.** Full methodology, tables, an ablation experiment, confident-failure analysis, and polished-essay results are in [`REPORT.md`](REPORT.md). Headline numbers:
 
-```text
-GET http://localhost:8000/
-```
-returns `{"status": "ok", "service": "AI Essay Detector"}`.
+| | Full model (61 features) | Ablation model (58 features, cliché/transition removed) |
+|---|---:|---:|
+| Accuracy | 1.000 | 1.000 |
+| Precision | 1.000 | 1.000 |
+| Recall | 1.000 | 1.000 |
+| F1 | 1.000 | 1.000 |
 
-`POST /analyze` (body: `{"essay": "..."}`) runs the full pipeline — GPT-2 features, stylometric features, the saved scaler, and the saved classifier — and returns an essay-level `essay_score` (0-100, described as an experimental signal, not a probability), a `label`, per-sentence evidence (`score`, raw `perplexity`, and the top 3 contributing signals with plain-language explanations), and a `limitations` list. See `app/scoring.py` for the sentence-evidence methodology (a documented substitution heuristic — the classifier only ever sees essay-level features, so sentence scores are a transparent local approximation, not the model's literal per-sentence output).
+n_test = 8. Zero genuine misclassifications occurred on this test set for either model — see `REPORT.md` §7 for why that is itself evidence the dataset is too small/easy, not evidence of real-world accuracy, and §5 for why the ablation result doesn't rule out a single-author stylistic confound (the same author wrote both classes).
 
-In a second terminal:
+## Known limitations
 
-```bash
-cd frontend
-npm install
-cp .env.example .env   # or set VITE_API_URL yourself
-npm run dev
-```
+- **Tiny dataset** — 44 hand-authored essays (32 for binary training). No result here generalizes beyond this specific small corpus.
+- **Authoring artifacts** — all essays written by one author in one sitting; AI examples deliberately cliché/transition-heavy.
+- **Topic limitations** — personal-narrative admissions-essay topics only; no STEM-heavy research essays, sensitive topics, non-US formats, or long-form essays.
+- **No controlled ESL evaluation** — documented as **NOT YET ESTABLISHED**, not glossed over. See `REPORT.md` §8.
+- **No guarantee of authorship** — even a perfectly-scoring model provides no proof that any individual essay was or wasn't AI-written. This tool must never be the sole basis for an academic-dishonesty accusation.
+- **Sentence-level scores are an explanatory heuristic, not a trained sentence-level classifier.** The Logistic Regression only ever sees essay-level aggregate features — it has no notion of an individual sentence's probability. Sentence-level signals are explanatory estimates derived from sentence-local measurements: each sentence's own local value is substituted into the corresponding essay-level feature slot, standardized the same way that feature was standardized during training, multiplied by the model's learned coefficient, then normalized within the essay. **They are not independently trained sentence-level probabilities or proof of authorship.** The same wording appears in the UI's "Technical details" panel (`frontend/src/components/EvidencePanel.jsx`) and in `backend/app/scoring.py`.
+- **GPT-2 context limitation** — GPT-2's attention window is 1024 tokens. Longer essays are scored via an overlapping sliding window (every token still gets real preceding context), but no token in a very long essay can attend to the *entire* preceding essay at once — an architectural limit of GPT-2, not a shortcut taken here.
 
-Open the printed local URL (typically `http://localhost:5173`), paste an essay, and click "Analyze Essay".
+## Why this is not an LLM wrapper
 
-## How to run tests
-
-```bash
-cd backend
-pytest tests -v
-```
-
-Covers: GPT-2 feature extraction edge cases, stylometric feature edge cases, and a full-pipeline integration test (essay → both extractors → combined feature vector → saved scaler → saved classifier → binary prediction), asserting no NaN/infinite values reach the classifier and that feature ordering matches what the model was trained on.
-
-## Current development dataset limitations
-
-The dataset in `data/` is **small (44 essays) and entirely hand-authored as development placeholder content** — not real applicant essays, and not the output of any actual LLM API call (none is configured in this project). Reported classifier metrics (currently 100% accuracy on an 8-essay test split) reflect that the placeholder "AI" essays were deliberately written with heavy cliché/transition-word usage to exercise the stylometry detectors, which makes the classes trivially separable — **this is a known dataset artifact, not a validated real-world result.** See [`data/README.md`](data/README.md) for the full, honest accounting of what this dataset is, what topics it does and doesn't cover, and what would need to change before any accuracy claim could be taken seriously.
-
-## Current project status
-
-**Phase 6 complete.** The full pipeline is wired end-to-end: a FastAPI `POST /analyze` endpoint (`app/main.py`, `app/scoring.py`) runs GPT-2 + stylometric feature extraction, the saved scaler and classifier, and a deterministic sentence-level evidence engine; a React + Vite frontend (`frontend/`) lets a user paste an essay, see a continuous 0-100 signal score, click individual sentences to see why they were flagged, and view a per-sentence perplexity chart and the model's limitations. Verified end-to-end in a real browser against a human, an AI-style, and a polished development essay.
+The application never sends a user's essay to a chat model and asks it to classify, score, or judge it. The only language model in the request path is GPT-2, running locally, used exclusively to compute token log-probabilities — a fixed, deterministic, non-generative statistical measurement. Every step that turns those numbers (and the independent stylometric numbers) into a decision — feature combination, scaling, classification, thresholds, sentence-level evidence — is explicit Python/scikit-learn code in this repository, not a prompt to a chat model. `backend/scripts/generate_polished.py` is the one place an external chat-model API (Anthropic/OpenAI) is referenced anywhere in the codebase, and it is strictly an **offline dataset-authoring tool**: it is never imported by, or reachable from, the `/analyze` request path, and its provider functions currently only raise `NotImplementedError`/`RuntimeError` rather than making any real call.
