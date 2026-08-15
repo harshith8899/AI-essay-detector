@@ -1,0 +1,27 @@
+{
+  "model_type": "Logistic Regression",
+  "requires_scaling": true,
+  "random_seed": 42,
+  "feature_count": 61,
+  "training_dataset_size": 32,
+  "train_size": 24,
+  "test_size": 8,
+  "test_metrics": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusion_matrix": [
+      [
+        4,
+        0
+      ],
+      [
+        0,
+        4
+      ]
+    ]
+  },
+  "training_date": "2026-08-15T14:38:21.901895+00:00",
+  "note": "Development-dataset results only, trained on a small hand-authored placeholder corpus. Not a scientific validation of real-world accuracy. See data/README.md for dataset limitations."
+}

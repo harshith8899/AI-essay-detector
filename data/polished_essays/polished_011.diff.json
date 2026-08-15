@@ -1,0 +1,27 @@
+[
+  {
+    "status": "changed",
+    "original": "My grandmother kept missing her medication times, so I built her a clunky little app over one winter break that just buzzed her phone at the right hours.",
+    "polished": "My grandmother frequently missed her medication times, prompting me to develop a modest application over winter break that simply alerted her phone at the appropriate hours."
+  },
+  {
+    "status": "changed",
+    "original": "My first version crashed constantly and sent notifications at 3 a.m. twice before I fixed the bug.",
+    "polished": "My initial version crashed repeatedly and, on two occasions, sent notifications at three in the morning before I resolved the underlying bug."
+  },
+  {
+    "status": "changed",
+    "original": "She still calls it 'the pill thing' and shows it off to her neighbors like it's magic, even though it's maybe two hundred lines of code held together with patience.",
+    "polished": "She continues to refer to it affectionately as 'the pill thing' and proudly demonstrates it to her neighbors as though it were magic, despite consisting of merely two hundred lines of code held together through patience and persistence."
+  },
+  {
+    "status": "changed",
+    "original": "It's not sophisticated.",
+    "polished": "It is not particularly sophisticated."
+  },
+  {
+    "status": "changed",
+    "original": "But it's the first thing I ever built that another person actually depends on.",
+    "polished": "However, it represents the first creation of mine upon which another person genuinely depends, a testament to the meaningful impact of small innovations."
+  }
+]

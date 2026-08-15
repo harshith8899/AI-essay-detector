@@ -1,0 +1,7 @@
+{
+  "category": "ai",
+  "model": "development-placeholder",
+  "prompt": "Write a college admissions essay about academic curiosity and a research project in approximately 180 words.",
+  "generated_at": "2026-08-15T00:00:00Z",
+  "note": "Hand-written imitation of generic AI-generated admissions-essay prose. No external LLM API was called to produce this text."
+}

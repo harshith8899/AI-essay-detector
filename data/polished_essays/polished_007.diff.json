@@ -1,0 +1,32 @@
+[
+  {
+    "status": "changed",
+    "original": "Our robot's arm snapped off thirty seconds into the qualifying round, in front of the one judge who'd been the toughest on us all season.",
+    "polished": "Our robot's arm snapped off a mere thirty seconds into the qualifying round, directly in front of the judge who had been the most critical of us throughout the season."
+  },
+  {
+    "status": "changed",
+    "original": "My teammate wanted to cry, and honestly so did I.",
+    "polished": "My teammate wanted to cry, and honestly, so did I."
+  },
+  {
+    "status": "changed",
+    "original": "We spent that night in a hotel bathroom with a hot glue gun and a roll of duct tape trying anything.",
+    "polished": "We spent that entire night in a hotel bathroom armed with a hot glue gun and duct tape, attempting every conceivable solution."
+  },
+  {
+    "status": "changed",
+    "original": "It held for exactly one more match, which was enough to not finish last.",
+    "polished": "It held for precisely one more match, which was sufficient to avoid finishing last."
+  },
+  {
+    "status": "changed",
+    "original": "We didn't advance.",
+    "polished": "We ultimately did not advance."
+  },
+  {
+    "status": "changed",
+    "original": "But I learned more about torque, and about staying calm when something breaks in front of everyone, than any match we actually won.",
+    "polished": "Nevertheless, I learned more about torque, and about maintaining composure when something breaks in front of everyone, than from any match we had actually won, a testament to resilience under pressure."
+  }
+]

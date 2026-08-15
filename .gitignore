@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+ENV/
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.next/
+out/
+.vite/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Model / cache directories
+.cache/
+*.ckpt
+*.pt
+*.bin
+*.safetensors
+huggingface/
+.huggingface/
+transformers_cache/
+
+# Datasets
+# The essays under data/{human,ai,polished}_essays/ ARE tracked: they are
+# small, hand-authored development placeholder content (see data/README.md),
+# not a large real-world corpus. Only regenerable derived artifacts are
+# ignored here.
+data/features.csv
+data/feature_names.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

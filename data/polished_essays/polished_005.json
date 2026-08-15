@@ -1,0 +1,8 @@
+{
+  "category": "polished",
+  "source_human_essay": "human_005.txt",
+  "model": "development-placeholder-manual-edit",
+  "prompt": "Lightly polish the following college admissions essay for grammar, flow, and word choice while preserving its meaning and voice.",
+  "generated_at": "2026-08-15T00:00:00Z",
+  "note": "Hand-written stand-in for an LLM polish pass. No external LLM API was called; generate_polished.py is the real pipeline for when an API is configured."
+}
