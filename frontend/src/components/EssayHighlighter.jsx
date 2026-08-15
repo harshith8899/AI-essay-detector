@@ -1,3 +1,6 @@
+import { useEffect, useRef } from "react";
+import SentenceNav from "./SentenceNav.jsx";
+
 // Single-hue sequential intensity (never a red/green verdict scale): opacity
 // of the shared "signal" blue scales continuously with the sentence score.
 function intensityStyle(score) {
@@ -7,14 +10,28 @@ function intensityStyle(score) {
 }
 
 export default function EssayHighlighter({ sentences, selectedIndex, onSelect }) {
+  const sentenceRefs = useRef([]);
+
+  useEffect(() => {
+    if (selectedIndex === null) return;
+    const el = sentenceRefs.current[selectedIndex];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [selectedIndex]);
+
   return (
     <div className="essay-highlighter">
       <h2 className="panel-title">Essay</h2>
       <p className="panel-hint">Click a sentence to see why it received its signal.</p>
+
+      <SentenceNav selectedIndex={selectedIndex} total={sentences.length} onSelect={onSelect} />
+
       <div className="essay-text">
         {sentences.map((sentence, i) => (
           <span
             key={i}
+            ref={(el) => (sentenceRefs.current[i] = el)}
             className={`sentence${selectedIndex === i ? " sentence-selected" : ""}`}
             style={intensityStyle(sentence.score)}
             onClick={() => onSelect(i)}

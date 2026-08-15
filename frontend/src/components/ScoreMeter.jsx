@@ -1,6 +1,12 @@
-export default function ScoreMeter({ score, label }) {
+function interpretScore(score) {
+  if (score < 35) return "Lower signal";
+  if (score <= 65) return "Moderate signal";
+  return "Higher signal";
+}
+
+export default function ScoreMeter({ score }) {
   const clamped = Math.max(0, Math.min(100, score));
-  const interpretation = label === "higher AI-like signal" ? "Higher signal" : "Lower signal";
+  const interpretation = interpretScore(clamped);
 
   return (
     <div className="score-meter">

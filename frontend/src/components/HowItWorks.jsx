@@ -16,7 +16,7 @@ Evidence + signal`;
 
 export default function HowItWorks() {
   return (
-    <section className="how-it-works" id="how-it-works">
+    <section className="how-it-works" id="methodology">
       <h2 className="panel-title">How it works</h2>
       <pre className="pipeline-diagram">{PIPELINE}</pre>
       <p className="how-it-works-explainer">
