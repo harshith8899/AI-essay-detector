@@ -1,11 +1,11 @@
 import { useState } from "react";
 
 const WIDTH = 680;
-const HEIGHT = 180;
+const HEIGHT = 200;
 const PADDING_LEFT = 36;
 const PADDING_RIGHT = 12;
 const PADDING_TOP = 12;
-const PADDING_BOTTOM = 24;
+const PADDING_BOTTOM = 34;
 const BAR_GAP = 4;
 const MAX_BAR_WIDTH = 24;
 
@@ -22,7 +22,7 @@ function roundedTopBarPath(x, y, width, height, radius) {
     Z`;
 }
 
-export default function PerplexityChart({ sentences }) {
+export default function PerplexityChart({ sentences, selectedIndex, onSelect }) {
   const [hoverIndex, setHoverIndex] = useState(null);
 
   const values = sentences.map((s) => s.perplexity).filter((v) => v !== null && v !== undefined);
@@ -34,13 +34,15 @@ export default function PerplexityChart({ sentences }) {
   const barWidth = Math.min(MAX_BAR_WIDTH, plotWidth / sentences.length - BAR_GAP);
   const baselineY = HEIGHT - PADDING_BOTTOM;
 
+  const activeIndex = hoverIndex !== null ? hoverIndex : selectedIndex;
+
   return (
     <div className="perplexity-chart">
       <h2 className="panel-title">Perplexity by sentence</h2>
       <p className="panel-hint">
         Higher bars mean GPT-2 found the sentence less predictable. Large swings between
-        neighboring sentences — burstiness — are more typical of human writing than of AI-generated
-        text, which tends to be more uniformly predictable.
+        neighboring sentences — burstiness — are more typical of human writing than of
+        AI-generated text, which tends to be more uniformly predictable.
       </p>
       <svg
         width={WIDTH}
@@ -69,27 +71,58 @@ export default function PerplexityChart({ sentences }) {
           const barHeight = (s.perplexity / maxValue) * plotHeight;
           const x = PADDING_LEFT + i * (barWidth + BAR_GAP);
           const y = baselineY - barHeight;
+          const isSelected = selectedIndex === i;
           const isHovered = hoverIndex === i;
           return (
-            <path
-              key={i}
-              d={roundedTopBarPath(x, y, barWidth, barHeight, 4)}
-              className={isHovered ? "chart-bar chart-bar-hover" : "chart-bar"}
-              onMouseEnter={() => setHoverIndex(i)}
-              onMouseLeave={() => setHoverIndex(null)}
-              onFocus={() => setHoverIndex(i)}
-              onBlur={() => setHoverIndex(null)}
-              tabIndex={0}
-              role="img"
-              aria-label={`Sentence ${i + 1}, perplexity ${s.perplexity.toFixed(1)}`}
-            />
+            <g key={i}>
+              <path
+                d={roundedTopBarPath(x, y, barWidth, barHeight, 4)}
+                className={isHovered || isSelected ? "chart-bar chart-bar-hover" : "chart-bar"}
+                onMouseEnter={() => setHoverIndex(i)}
+                onMouseLeave={() => setHoverIndex(null)}
+                onFocus={() => setHoverIndex(i)}
+                onBlur={() => setHoverIndex(null)}
+                onClick={() => onSelect(i)}
+                tabIndex={0}
+                role="button"
+                aria-pressed={isSelected}
+                aria-label={`Sentence ${i + 1}, perplexity ${s.perplexity.toFixed(1)}`}
+              />
+              {isSelected && (
+                <circle
+                  cx={x + barWidth / 2}
+                  cy={y - 6}
+                  r={3}
+                  className="chart-selected-marker"
+                  aria-hidden="true"
+                />
+              )}
+              {barWidth >= 14 && (
+                <text
+                  x={x + barWidth / 2}
+                  y={baselineY + 16}
+                  textAnchor="middle"
+                  className="chart-axis-label"
+                >
+                  {i + 1}
+                </text>
+              )}
+            </g>
           );
         })}
+        <text
+          x={PADDING_LEFT + plotWidth / 2}
+          y={HEIGHT - 4}
+          textAnchor="middle"
+          className="chart-axis-title"
+        >
+          Sentence
+        </text>
       </svg>
       <div className="chart-tooltip" aria-live="polite">
-        {hoverIndex !== null
-          ? `Sentence ${hoverIndex + 1}: perplexity ${sentences[hoverIndex].perplexity.toFixed(1)}`
-          : " "}
+        {activeIndex !== null && sentences[activeIndex]?.perplexity !== undefined
+          ? `Sentence ${activeIndex + 1}: perplexity ${sentences[activeIndex].perplexity.toFixed(1)}`
+          : " "}
       </div>
     </div>
   );

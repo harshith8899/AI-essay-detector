@@ -16,9 +16,9 @@ export default function ScoreMeter({ score, label }) {
         <div className="score-meter-fill" style={{ width: `${clamped}%` }} />
       </div>
       <p className="score-meter-interpretation">{interpretation}</p>
-      <p className="score-meter-caveat">
-        This is an experimental model score based on measurable text statistics — not proof of
-        authorship.
+      <p className="score-meter-explainer">
+        This score reflects how strongly the essay matches signals learned from the development
+        dataset. It is an experimental model signal, not proof of authorship.
       </p>
     </div>
   );

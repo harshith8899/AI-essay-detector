@@ -1,9 +1,9 @@
-const FEATURE_LABELS = {
-  perplexity: "Perplexity",
-  burstiness: "Rhythm variation",
-  cliche: "Cliché phrase",
-  transition_opener: "Transition opener",
-  sentence_length: "Sentence rhythm",
+const FEATURE_META = {
+  perplexity: { label: "Perplexity", badge: "LM signal" },
+  burstiness: { label: "Rhythm variation", badge: "LM signal" },
+  cliche: { label: "Cliché phrase", badge: "Phrase signal" },
+  transition_opener: { label: "Transition opener", badge: "Phrase signal" },
+  sentence_length: { label: "Sentence rhythm", badge: "Style signal" },
 };
 
 export default function EvidencePanel({ sentence }) {
@@ -18,24 +18,54 @@ export default function EvidencePanel({ sentence }) {
 
   return (
     <aside className="evidence-panel">
-      <h2 className="panel-title">Why did this sentence receive this signal?</h2>
-
       <div className="evidence-score">
         <span className="evidence-score-label">Sentence signal</span>
         <span className="evidence-score-value">{sentence.score.toFixed(0)} / 100</span>
       </div>
 
+      <h2 className="panel-title evidence-subheading">Why this sentence received this signal</h2>
+
       <ul className="evidence-list">
-        {sentence.top_features.map((feature, i) => (
-          <li key={i} className="evidence-item">
-            <span className="evidence-item-name">{FEATURE_LABELS[feature.name] || feature.name}</span>
-            <p className="evidence-item-note">{feature.plain_language_note}</p>
-          </li>
-        ))}
+        {sentence.top_features.map((feature, i) => {
+          const meta = FEATURE_META[feature.name] || { label: feature.name, badge: "Signal" };
+          return (
+            <li key={i} className="evidence-item">
+              <div className="evidence-item-header">
+                <span className="evidence-item-name">{meta.label}</span>
+                <span className="evidence-badge">{meta.badge}</span>
+              </div>
+              <p className="evidence-item-note">{feature.plain_language_note}</p>
+            </li>
+          );
+        })}
       </ul>
 
       <details className="technical-details">
         <summary>Technical details</summary>
+
+        <dl className="technical-model-info">
+          <div>
+            <dt>Model</dt>
+            <dd>Logistic Regression</dd>
+          </div>
+          <div>
+            <dt>Feature count</dt>
+            <dd>61</dd>
+          </div>
+          <div>
+            <dt>Language model instrument</dt>
+            <dd>GPT-2</dd>
+          </div>
+          <div>
+            <dt>Primary LM signals</dt>
+            <dd>perplexity, burstiness</dd>
+          </div>
+          <div>
+            <dt>Stylometric signals</dt>
+            <dd>sentence length, TTR, hapax rate, POS entropy, function words, phrase signals</dd>
+          </div>
+        </dl>
+
         <p className="technical-disclosure">
           Sentence-level signals are explanatory estimates derived from sentence-local
           measurements. They are not independently trained sentence-level probabilities or
@@ -44,6 +74,7 @@ export default function EvidencePanel({ sentence }) {
           feature weights against this sentence's own local values, then scaling relative to
           the other sentences in this essay.
         </p>
+
         <table className="technical-table">
           <tbody>
             {sentence.top_features.map((feature, i) => (
@@ -54,7 +85,11 @@ export default function EvidencePanel({ sentence }) {
             ))}
             <tr>
               <td>raw perplexity</td>
-              <td>{sentence.perplexity !== null && sentence.perplexity !== undefined ? sentence.perplexity.toFixed(2) : "n/a"}</td>
+              <td>
+                {sentence.perplexity !== null && sentence.perplexity !== undefined
+                  ? sentence.perplexity.toFixed(2)
+                  : "n/a"}
+              </td>
             </tr>
           </tbody>
         </table>

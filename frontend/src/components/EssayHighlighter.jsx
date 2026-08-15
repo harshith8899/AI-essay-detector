@@ -21,6 +21,7 @@ export default function EssayHighlighter({ sentences, selectedIndex, onSelect })
             tabIndex={0}
             role="button"
             aria-pressed={selectedIndex === i}
+            aria-label={`Sentence signal ${sentence.score.toFixed(0)} out of 100: ${sentence.text}`}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
@@ -31,6 +32,11 @@ export default function EssayHighlighter({ sentences, selectedIndex, onSelect })
             {sentence.text}{" "}
           </span>
         ))}
+      </div>
+      <div className="intensity-legend" aria-hidden="true">
+        <span>Lower signal</span>
+        <span className="intensity-legend-bar" />
+        <span>Higher signal</span>
       </div>
     </div>
   );
