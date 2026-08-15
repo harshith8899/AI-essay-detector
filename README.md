@@ -70,10 +70,11 @@ python -m scripts.build_features       # writes data/features.csv
 python -m scripts.train_classifier     # trains, evaluates, saves model artifacts
 ```
 
-## How to run FastAPI
+## How to run the application
 
 ```bash
 cd backend
+.venv\Scripts\activate
 uvicorn app.main:app --reload
 ```
 
@@ -81,6 +82,19 @@ uvicorn app.main:app --reload
 GET http://localhost:8000/
 ```
 returns `{"status": "ok", "service": "AI Essay Detector"}`.
+
+`POST /analyze` (body: `{"essay": "..."}`) runs the full pipeline — GPT-2 features, stylometric features, the saved scaler, and the saved classifier — and returns an essay-level `essay_score` (0-100, described as an experimental signal, not a probability), a `label`, per-sentence evidence (`score`, raw `perplexity`, and the top 3 contributing signals with plain-language explanations), and a `limitations` list. See `app/scoring.py` for the sentence-evidence methodology (a documented substitution heuristic — the classifier only ever sees essay-level features, so sentence scores are a transparent local approximation, not the model's literal per-sentence output).
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+cp .env.example .env   # or set VITE_API_URL yourself
+npm run dev
+```
+
+Open the printed local URL (typically `http://localhost:5173`), paste an essay, and click "Analyze Essay".
 
 ## How to run tests
 
@@ -97,4 +111,4 @@ The dataset in `data/` is **small (44 essays) and entirely hand-authored as deve
 
 ## Current project status
 
-**Phase 4 complete.** Essay → GPT-2 features → stylometric features → combined feature vector → trained interpretable classifier → prediction works end-to-end on the development dataset, with a passing integration test. No API endpoint exposes this yet (`main.py` still only has the health check) and no frontend exists.
+**Phase 6 complete.** The full pipeline is wired end-to-end: a FastAPI `POST /analyze` endpoint (`app/main.py`, `app/scoring.py`) runs GPT-2 + stylometric feature extraction, the saved scaler and classifier, and a deterministic sentence-level evidence engine; a React + Vite frontend (`frontend/`) lets a user paste an essay, see a continuous 0-100 signal score, click individual sentences to see why they were flagged, and view a per-sentence perplexity chart and the model's limitations. Verified end-to-end in a real browser against a human, an AI-style, and a polished development essay.
