@@ -1,38 +1,37 @@
 const FEATURE_META = {
-  perplexity: { label: "Perplexity", badge: "LM signal" },
-  burstiness: { label: "Rhythm variation", badge: "LM signal" },
-  cliche: { label: "Cliché phrase", badge: "Phrase signal" },
-  transition_opener: { label: "Transition opener", badge: "Phrase signal" },
-  sentence_length: { label: "Sentence rhythm", badge: "Style signal" },
+  perplexity: { label: "Perplexity", tag: "LM" },
+  burstiness: { label: "Rhythm variation", tag: "LM" },
+  cliche: { label: "Cliché phrase", tag: "PHRASE" },
+  transition_opener: { label: "Transition opener", tag: "PHRASE" },
+  sentence_length: { label: "Sentence rhythm", tag: "STYLE" },
 };
 
 export default function EvidencePanel({ sentence }) {
   if (!sentence) {
     return (
-      <aside className="evidence-panel evidence-panel-empty">
-        <h2 className="panel-title">Why did this sentence receive this signal?</h2>
-        <p className="panel-hint">Click a sentence in the essay to see its evidence here.</p>
-      </aside>
+      <div className="evidence-panel evidence-panel-empty">
+        <p className="panel-hint">Click a sentence to see its evidence here.</p>
+      </div>
     );
   }
 
   return (
-    <aside className="evidence-panel">
+    <div className="evidence-panel">
       <div className="evidence-score">
-        <span className="evidence-score-label">Sentence signal</span>
+        <span className="section-label">Sentence signal</span>
         <span className="evidence-score-value">{sentence.score.toFixed(0)} / 100</span>
       </div>
 
-      <h2 className="panel-title evidence-subheading">Why this sentence received this signal</h2>
+      <p className="evidence-heading">Why this sentence received this signal</p>
 
       <ul className="evidence-list">
         {sentence.top_features.map((feature, i) => {
-          const meta = FEATURE_META[feature.name] || { label: feature.name, badge: "Signal" };
+          const meta = FEATURE_META[feature.name] || { label: feature.name, tag: "" };
           return (
             <li key={i} className="evidence-item">
               <div className="evidence-item-header">
+                <span className="evidence-item-tag">{meta.tag}</span>
                 <span className="evidence-item-name">{meta.label}</span>
-                <span className="evidence-badge">{meta.badge}</span>
               </div>
               <p className="evidence-item-note">{feature.plain_language_note}</p>
             </li>
@@ -94,6 +93,6 @@ export default function EvidencePanel({ sentence }) {
           </tbody>
         </table>
       </details>
-    </aside>
+    </div>
   );
 }

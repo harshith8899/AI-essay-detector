@@ -10,6 +10,7 @@ import KeyMetrics from "./components/KeyMetrics.jsx";
 import EssayHighlighter from "./components/EssayHighlighter.jsx";
 import EvidencePanel from "./components/EvidencePanel.jsx";
 import PerplexityChart from "./components/PerplexityChart.jsx";
+import ReadingSummary from "./components/ReadingSummary.jsx";
 import LimitationsPanel from "./components/LimitationsPanel.jsx";
 import HowItWorks from "./components/HowItWorks.jsx";
 import { analyzeEssay } from "./api.js";
@@ -54,86 +55,66 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header />
       <Navbar />
       <main className="layout">
-        <section className="workspace-grid">
-          {/* LEFT: essay input / original essay */}
-          <div className="workspace-column workspace-column-input" id="analyze">
-            <p className="empty-state-hint">
-              Paste an admissions essay to explore measurable signals associated with
-              machine-generated prose. The tool does not determine authorship with certainty.
-            </p>
+        <Header />
 
-            <SampleEssays onSelect={handleSelectSample} disabled={loading} />
-
-            <EssayInput
-              essay={essay}
-              onChange={setEssay}
-              onAnalyze={handleAnalyze}
-              loading={loading}
-            />
-
-            {result && !loading && (
-              <button type="button" className="new-essay-button" onClick={handleReset}>
-                New Essay
-              </button>
-            )}
-
-            {loading && <AnalysisStatus />}
-            {error && !loading && <ErrorState message={error} onRetry={handleAnalyze} />}
+        <section className="analyze-grid" id="analyze">
+          <div className="analyze-essay">
+            <div className="essay-panel">
+              {result ? (
+                <>
+                  <div className="essay-panel-header">
+                    <p className="section-label">Essay</p>
+                    <button type="button" className="text-action" onClick={handleReset}>
+                      New essay
+                    </button>
+                  </div>
+                  <EssayHighlighter
+                    sentences={result.sentences}
+                    selectedIndex={selectedIndex}
+                    onSelect={setSelectedIndex}
+                  />
+                </>
+              ) : (
+                <>
+                  <p className="section-label">Essay</p>
+                  <EssayInput
+                    essay={essay}
+                    onChange={setEssay}
+                    onAnalyze={handleAnalyze}
+                    loading={loading}
+                  />
+                  <SampleEssays onSelect={handleSelectSample} disabled={loading} />
+                  {loading && <AnalysisStatus />}
+                  {error && !loading && <ErrorState message={error} onRetry={handleAnalyze} />}
+                </>
+              )}
+            </div>
           </div>
 
-          {/* CENTER: analyzed essay with sentence highlighting */}
-          <div className="workspace-column workspace-column-essay">
+          <div className="analyze-signals">
             {result ? (
-              <EssayHighlighter
-                sentences={result.sentences}
-                selectedIndex={selectedIndex}
-                onSelect={setSelectedIndex}
-              />
+              <>
+                <ScoreMeter score={result.essay_score} />
+                <div id="metrics">
+                  <p className="section-label">Signals</p>
+                  <KeyMetrics sentences={result.sentences} />
+                </div>
+                <EvidencePanel sentence={selectedSentence} />
+              </>
             ) : (
-              <div className="essay-highlighter essay-placeholder">
-                <h2 className="panel-title">Essay</h2>
-                <p className="panel-hint">
-                  Your essay will appear here with sentence-level highlighting once analyzed.
-                </p>
+              <div className="signals-placeholder" id="metrics">
+                <p className="section-label">Signals</p>
+                <p className="panel-hint">Results will appear here once you analyze an essay.</p>
               </div>
             )}
-          </div>
-
-          {/* RIGHT: score + selected sentence evidence */}
-          <div className="workspace-column workspace-column-signal">
-            <div id="signal">
-              {result ? (
-                <ScoreMeter score={result.essay_score} />
-              ) : (
-                <div className="score-meter score-placeholder">
-                  <span className="score-meter-title">AI-likeness signal</span>
-                  <p className="panel-hint">Results will appear here after you analyze an essay.</p>
-                </div>
-              )}
-            </div>
-
-            <div id="evidence">
-              {result ? (
-                <EvidencePanel sentence={selectedSentence} />
-              ) : (
-                <aside className="evidence-panel evidence-panel-empty">
-                  <h2 className="panel-title">Why did this sentence receive this signal?</h2>
-                  <p className="panel-hint">
-                    Evidence for the selected sentence will appear here after you analyze an
-                    essay.
-                  </p>
-                </aside>
-              )}
-            </div>
           </div>
         </section>
 
         {result && (
           <>
-            <KeyMetrics sentences={result.sentences} />
+            <ReadingSummary result={result} />
             <PerplexityChart
               sentences={result.sentences}
               selectedIndex={selectedIndex}
@@ -142,20 +123,16 @@ export default function App() {
           </>
         )}
 
-        <div id="limitations">
-          {result ? (
-            <LimitationsPanel limitations={result.limitations} />
-          ) : (
-            <section className="limitations-panel">
-              <h2 className="panel-title">Important limitations</h2>
-              <p className="panel-hint">
-                Limitations will appear here after you analyze an essay.
-              </p>
-            </section>
-          )}
-        </div>
-
         <HowItWorks />
+
+        {result ? (
+          <LimitationsPanel limitations={result.limitations} />
+        ) : (
+          <section className="limitations" id="limitations">
+            <p className="section-label">Limitations</p>
+            <p className="panel-hint">Limitations will appear here after you analyze an essay.</p>
+          </section>
+        )}
       </main>
     </div>
   );

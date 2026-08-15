@@ -1,7 +1,7 @@
 export default function LimitationsPanel({ limitations }) {
   return (
-    <section className="limitations-panel">
-      <h2 className="panel-title">Important limitations</h2>
+    <section className="limitations" id="limitations">
+      <p className="section-label">Limitations</p>
       <p className="limitations-intro">
         This is a development-stage research instrument, not a validated authorship detector.
       </p>

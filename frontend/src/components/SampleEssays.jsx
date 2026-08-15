@@ -2,22 +2,21 @@ import { SAMPLE_ESSAYS } from "../sampleEssays.js";
 
 export default function SampleEssays({ onSelect, disabled }) {
   return (
-    <div className="sample-essays">
-      <span className="sample-essays-label">Try an example:</span>
-      <div className="sample-essays-buttons">
-        {SAMPLE_ESSAYS.map((sample) => (
+    <p className="sample-essays">
+      <span className="sample-essays-label">Try a sample:</span>{" "}
+      {SAMPLE_ESSAYS.map((sample, i) => (
+        <span key={sample.key}>
           <button
-            key={sample.key}
             type="button"
-            className="sample-essay-button"
+            className="sample-essay-link"
             onClick={() => onSelect(sample.text)}
             disabled={disabled}
           >
             {sample.label}
           </button>
-        ))}
-      </div>
-      <p className="sample-essays-note">Examples are for demonstration only.</p>
-    </div>
+          {i < SAMPLE_ESSAYS.length - 1 ? <span className="sample-essays-sep"> · </span> : null}
+        </span>
+      ))}
+    </p>
   );
 }

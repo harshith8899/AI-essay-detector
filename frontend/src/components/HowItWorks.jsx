@@ -6,23 +6,22 @@ Perplexity + burstiness
 
 +
 
-Stylometric analysis
+Stylometric features
   ↓
-61 measurable features
+61 features
   ↓
 Logistic Regression
   ↓
-Evidence + signal`;
+Signal + evidence`;
 
 export default function HowItWorks() {
   return (
-    <section className="how-it-works" id="methodology">
-      <h2 className="panel-title">How it works</h2>
+    <section className="methodology" id="methodology">
+      <p className="section-label">Methodology</p>
       <pre className="pipeline-diagram">{PIPELINE}</pre>
-      <p className="how-it-works-explainer">
-        The language model is used as a statistical instrument. It does not receive the essay
-        and decide whether it is AI. The final classification is produced by our own
-        feature-based model.
+      <p className="methodology-note">
+        GPT-2 is used as a statistical instrument. It does not receive the essay and decide
+        whether it is AI. The final classification is produced by our own feature-based model.
       </p>
     </section>
   );
