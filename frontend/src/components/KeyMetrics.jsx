@@ -5,7 +5,7 @@ const VARIATION_PERCENT = { Low: 20, Moderate: 55, High: 90 };
 const METRICS = [
   {
     key: "meanPerplexity",
-    label: "Mean perplexity",
+    label: "Perplexity",
     note: "How predictable the wording is to the language model.",
     value: (v) => (v.meanPerplexity === null ? "n/a" : v.meanPerplexity.toFixed(1)),
     percent: (v) => (v.meanPerplexity === null ? 0 : Math.min(100, (v.meanPerplexity / 120) * 100)),
@@ -41,7 +41,12 @@ export default function KeyMetrics({ sentences }) {
       {METRICS.map((metric) => (
         <div key={metric.key} className="gauge-row">
           <div className="gauge-top">
-            <span className="gauge-name">{metric.label}</span>
+            <span className="gauge-name">
+              {metric.label}
+              <button type="button" className="gauge-info" aria-label={metric.note}>
+                ?<span className="gauge-tooltip" role="tooltip">{metric.note}</span>
+              </button>
+            </span>
             <span className="gauge-value">{metric.value(values)}</span>
           </div>
           <div className="gauge-track">
@@ -50,7 +55,6 @@ export default function KeyMetrics({ sentences }) {
               style={{ width: `${Math.max(4, metric.percent(values, sentences.length))}%` }}
             />
           </div>
-          <p className="gauge-note">{metric.note}</p>
         </div>
       ))}
     </div>

@@ -1,7 +1,6 @@
 const LINKS = [
   { href: "#analyze", label: "Analyze" },
   { href: "#methodology", label: "Methodology" },
-  { href: "#metrics", label: "Metrics" },
   { href: "#limitations", label: "Limitations" },
 ];
 

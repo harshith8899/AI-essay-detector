@@ -1,9 +1,9 @@
-const FEATURE_META = {
-  perplexity: { label: "Perplexity", tag: "LM" },
-  burstiness: { label: "Rhythm variation", tag: "LM" },
-  cliche: { label: "Cliché phrase", tag: "PHRASE" },
-  transition_opener: { label: "Transition opener", tag: "PHRASE" },
-  sentence_length: { label: "Sentence rhythm", tag: "STYLE" },
+const FEATURE_LABELS = {
+  perplexity: "Perplexity",
+  burstiness: "Rhythm variation",
+  cliche: "Cliché phrase",
+  transition_opener: "Transition opener",
+  sentence_length: "Sentence rhythm",
 };
 
 export default function EvidencePanel({ sentence }) {
@@ -15,6 +15,8 @@ export default function EvidencePanel({ sentence }) {
     );
   }
 
+  const topFeature = sentence.top_features[0];
+
   return (
     <div className="evidence-panel">
       <div className="evidence-score">
@@ -22,22 +24,23 @@ export default function EvidencePanel({ sentence }) {
         <span className="evidence-score-value">{sentence.score.toFixed(0)} / 100</span>
       </div>
 
-      <p className="evidence-heading">Why this sentence received this signal</p>
+      <p className="evidence-heading">Why this sentence</p>
 
-      <ul className="evidence-list">
-        {sentence.top_features.map((feature, i) => {
-          const meta = FEATURE_META[feature.name] || { label: feature.name, tag: "" };
-          return (
-            <li key={i} className="evidence-item">
-              <div className="evidence-item-header">
-                <span className="evidence-item-tag">{meta.tag}</span>
-                <span className="evidence-item-name">{meta.label}</span>
-              </div>
-              <p className="evidence-item-note">{feature.plain_language_note}</p>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="evidence-row">
+        <span className="evidence-row-label">Perplexity</span>
+        <span className="evidence-row-value">
+          {sentence.perplexity !== null && sentence.perplexity !== undefined
+            ? sentence.perplexity.toFixed(1)
+            : "n/a"}
+        </span>
+      </div>
+
+      {topFeature && (
+        <div className="evidence-top-feature">
+          <p className="evidence-item-name">{FEATURE_LABELS[topFeature.name] || topFeature.name}</p>
+          <p className="evidence-item-note">{topFeature.plain_language_note}</p>
+        </div>
+      )}
 
       <details className="technical-details">
         <summary>Technical details</summary>
@@ -55,14 +58,6 @@ export default function EvidencePanel({ sentence }) {
             <dt>Language model instrument</dt>
             <dd>GPT-2</dd>
           </div>
-          <div>
-            <dt>Primary LM signals</dt>
-            <dd>perplexity, burstiness</dd>
-          </div>
-          <div>
-            <dt>Stylometric signals</dt>
-            <dd>sentence length, TTR, hapax rate, POS entropy, function words, phrase signals</dd>
-          </div>
         </dl>
 
         <p className="technical-disclosure">
@@ -78,18 +73,10 @@ export default function EvidencePanel({ sentence }) {
           <tbody>
             {sentence.top_features.map((feature, i) => (
               <tr key={i}>
-                <td>{feature.name}</td>
+                <td>{FEATURE_LABELS[feature.name] || feature.name}</td>
                 <td>{feature.contribution.toFixed(4)}</td>
               </tr>
             ))}
-            <tr>
-              <td>raw perplexity</td>
-              <td>
-                {sentence.perplexity !== null && sentence.perplexity !== undefined
-                  ? sentence.perplexity.toFixed(2)
-                  : "n/a"}
-              </td>
-            </tr>
           </tbody>
         </table>
       </details>

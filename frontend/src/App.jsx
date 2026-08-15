@@ -9,8 +9,6 @@ import ScoreMeter from "./components/ScoreMeter.jsx";
 import KeyMetrics from "./components/KeyMetrics.jsx";
 import EssayHighlighter from "./components/EssayHighlighter.jsx";
 import EvidencePanel from "./components/EvidencePanel.jsx";
-import PerplexityChart from "./components/PerplexityChart.jsx";
-import ReadingSummary from "./components/ReadingSummary.jsx";
 import LimitationsPanel from "./components/LimitationsPanel.jsx";
 import HowItWorks from "./components/HowItWorks.jsx";
 import { analyzeEssay } from "./api.js";
@@ -97,31 +95,16 @@ export default function App() {
             {result ? (
               <>
                 <ScoreMeter score={result.essay_score} />
-                <div id="metrics">
-                  <p className="section-label">Signals</p>
-                  <KeyMetrics sentences={result.sentences} />
-                </div>
+                <KeyMetrics sentences={result.sentences} />
                 <EvidencePanel sentence={selectedSentence} />
               </>
             ) : (
-              <div className="signals-placeholder" id="metrics">
-                <p className="section-label">Signals</p>
+              <div className="signals-placeholder">
                 <p className="panel-hint">Results will appear here once you analyze an essay.</p>
               </div>
             )}
           </div>
         </section>
-
-        {result && (
-          <>
-            <ReadingSummary result={result} />
-            <PerplexityChart
-              sentences={result.sentences}
-              selectedIndex={selectedIndex}
-              onSelect={setSelectedIndex}
-            />
-          </>
-        )}
 
         <HowItWorks />
 
